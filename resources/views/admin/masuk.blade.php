@@ -51,10 +51,48 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="plate_number" class="block text-sm font-medium text-gray-700 mb-1">Nomor Polisi (Plat)</label>
-                                <input type="text" name="plate_number" id="plate_number" required 
+                                <input type="text" name="plate_number" id="plate_number" class="form-control" required 
                                     class="w-full border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm text-xl font-bold uppercase"
                                     placeholder="Contoh: B 1234 ABC">
-                            </div>
+                            </div>  
+
+                          <script>
+    setInterval(function() {
+        fetch('/api/get-plat-antrian')
+            .then(response => response.json())
+            .then(data => {
+               if (data && data.plate_number) {
+    // Isi plat nomor
+    document.getElementById('plate_number').value = data.plate_number;
+    
+    // Pilih kategori otomatis berdasarkan data.type (mobil/motor)
+    let selectKategori = document.querySelector('select[name="category_id"]');
+    if (selectKategori && data.type) {
+        for (let i = 0; i < selectKategori.options.length; i++) {
+            // Mencari kata 'mobil' atau 'motor' di dalam pilihan dropdown
+            if (selectKategori.options[i].text.toLowerCase().includes(data.type.toLowerCase())) {
+                selectKategori.selectedIndex = i;
+                break;
+                            }
+                        }
+                    }
+
+                    // 3. Otomatis Pilih Area Parkir
+                    // Gunakan select[name="slot_id"] sesuai form Anda
+                    let selectArea = document.querySelector('select[name="slot_id"]');
+                    if (selectArea) {
+                        // Pilih area pertama yang tersedia (index 1 karena index 0 adalah placeholder)
+                        if (selectArea.options.length > 1) {
+                            selectArea.selectedIndex = 1;
+                        }
+                    }
+
+                    console.log('Form otomatis terisi untuk: ' + data.plate_number);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }, 2000); // Cek setiap 2 detik
+</script>
 
                             <div>
                                 <label for="vehicle_id" class="block text-sm font-medium text-gray-700 mb-1">Kategori Kendaraan</label>

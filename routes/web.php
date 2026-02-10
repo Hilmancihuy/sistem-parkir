@@ -63,6 +63,8 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('cetak/{id}', [ParkingController::class, 'showCetak'])->name('cetak');
         // Tambahkan ini untuk memproses update kapasitas slot/area
         Route::put('/admin/slot/update/{id}', [ParkingSlotController::class, 'updateSlot'])->name('admin.slot.update');
+
+       
     });
 
 

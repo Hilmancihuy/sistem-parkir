@@ -95,22 +95,38 @@ public function indexKeluar(Request $request)
 
 public function updateKeluar(Request $request, $id)
 {
-    $parking = Parking::findOrFail($id);
+    $parking = Parking::with('vehicle')->findOrFail($id);
     
-    // 1. Ambil harga dasar flat dari kategori (misal: Motor 2000, Mobil 5000)
-    $totalPrice = $parking->vehicle->price; 
+    $entryTime = \Carbon\Carbon::parse($parking->entry_time);
+    $exitTime = now(); 
 
-    // 2. Update data transaksi
+    // Menggunakan diffInHours untuk mendapatkan angka jam bulat (integer)
+    // 0-59 menit = 0
+    // 60-119 menit = 1
+    $durationInHours = (int) $entryTime->diffInHours($exitTime);
+
+    // Ambil harga dasar kategori (Misal: Motor 2000, Mobil 5000)
+    $basePrice = $parking->vehicle->price; 
+    
+    // Tarif tambahan Rp 1.000 dikali jumlah jam bulat
+    $extraPrice = $durationInHours * 1000;
+    
+    $totalPrice = $basePrice + $extraPrice;
+
+    // Simpan ke database
     $parking->update([
-        'exit_time' => now(), // Waktu keluar tetap dicatat untuk laporan
+        'exit_time' => $exitTime,
         'total_price' => $totalPrice,
         'status' => 'selesai'
     ]);
 
-    // 3. Update Kuota Area: Kurangi jumlah terisi karena kendaraan keluar
+    // Kembalikan kuota area
     \App\Models\ParkingSlot::find($parking->slot_id)->decrement('used');
 
-    return redirect()->route('admin.cetak', $parking->id);
+    return redirect()->route('admin.keluar')->with('success', 
+        "Kendaraan {$parking->plate_number} Keluar. Total Bayar: Rp " . number_format($totalPrice, 0, ',', '.') . 
+        " (Durasi: {$durationInHours} Jam)"
+    );
 }
 
 
@@ -180,6 +196,36 @@ public function report(Request $request)
         ->get();
 
     return view('admin.report', compact('reportByCategory', 'monthlyRevenue', 'dailyReports', 'month', 'year'));
+}
+
+
+
+// app/Http/Controllers/ParkingController.php
+
+// Menyimpan plat dari Python ke Cache/Session sementara
+// app/Http/Controllers/ParkingController.php
+
+// app/Http/Controllers/ParkingController.php
+
+public function setAntrian(Request $request) {
+    // Simpan semua data dalam satu array agar tidak tertukar
+    cache(['temp_parking_data' => [
+        'plate_number' => $request->plate_number,
+        'type'         => $request->type
+    ]], now()->addMinutes(1));
+    
+    return response()->json(['status' => 'success']);
+}
+
+public function getAntrian() {
+    // Ambil dengan kunci yang sama: temp_parking_data
+    $data = cache('temp_parking_data'); 
+    
+    if ($data) {
+        cache()->forget('temp_parking_data');
+        return response()->json($data);
+    }
+    return response()->json(null);
 }
 
 

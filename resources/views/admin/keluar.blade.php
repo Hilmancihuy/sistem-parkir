@@ -59,21 +59,42 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse($parkings as $p)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="p-4 font-bold uppercase">{{ $p->plate_number }}</td>
-                                <td class="p-4">{{ $p->vehicle->name }}</td>
-                                <td class="p-4 text-orange-600 font-bold">{{ $p->slot->code }}</td>
-                                <td class="p-4 text-sm text-gray-500">{{ $p->entry_time }}</td>
-                                <td class="p-4 text-center">
-                                    <form action="{{ route('admin.keluar.update', $p->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-md transition">
-                                            Proses Keluar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                           <tr class="hover:bg-gray-50 transition">
+    <td class="p-4 font-bold uppercase text-lg text-gray-800">{{ $p->plate_number }}</td>
+    <td class="p-4 text-gray-600">{{ $p->vehicle->name }}</td>
+    <td class="p-4 text-sm text-gray-500">
+        {{ $p->entry_time }}<br>
+        <span class="text-xs text-orange-500 font-medium">
+            Durasi: {{ \Carbon\Carbon::parse($p->entry_time)->diffInHours(now()) }} Jam
+        </span>
+    </td>
+    <td class="p-4 text-center">
+        @php
+    $entry = \Carbon\Carbon::parse($p->entry_time);
+    $now = now();
+    
+    // Hitung jam bulat untuk estimasi tarif di layar
+    $hours = (int) $entry->diffInHours($now);
+    $currentBill = $p->vehicle->price + ($hours * 1000);
+@endphp
+
+
+        
+        <form action="{{ route('admin.keluar.update', $p->id) }}" method="POST" 
+              onsubmit="return confirm('Konfirmasi Pembayaran Rp {{ number_format($currentBill, 0, ',', '.') }}?')">
+            @csrf
+            @method('PATCH')
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-sm font-bold text-blue-700">
+                    Rp {{ number_format($currentBill, 0, ',', '.') }}
+                </span>
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl font-bold shadow-md transition w-full">
+                    BAYAR & KELUAR
+                </button>
+            </div>
+        </form>
+    </td>
+</tr>
                             @empty
                             <tr>
                                 <td colspan="5" class="p-8 text-center text-gray-400 italic">Tidak ada kendaraan yang sedang parkir.</td>
