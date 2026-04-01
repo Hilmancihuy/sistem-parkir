@@ -229,6 +229,24 @@ public function getAntrian() {
 }
 
 
+public function petugasDashboard()
+{
+    // Ambil data slot untuk memantau kapasitas parkir
+    $areas = \App\Models\ParkingSlot::all();
+    
+    // Hitung kendaraan yang masih parkir (status 'parkir')
+    $totalParkir = \App\Models\Parking::where('status', 'parkir')->count();
+    
+    // Ambil 5 riwayat kendaraan masuk terakhir untuk pantauan petugas
+    $recentParkings = \App\Models\Parking::with(['vehicle', 'slot'])
+        ->latest()
+        ->take(5)
+        ->get();
+
+    return view('petugas.dashboard', compact('areas', 'totalParkir', 'recentParkings'));
+}
+
+
 
 
 

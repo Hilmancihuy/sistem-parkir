@@ -14,7 +14,8 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             {{-- Ringkasan Total --}}
-            <div class="mb-6 bg-orange-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 flex justify-between items-center">
+           <div class="mb-6 bg-orange-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 
+            flex flex-col md:flex-row gap-4 md:justify-between md:items-center">
                 <div>
                     <p class="text-orange-100 text-sm font-medium">Total Pendapatan Terarsip</p>
                     <h3 class="text-3xl font-bold">Rp {{ number_format($histories->sum('total_price'), 0, ',', '.') }}</h3>
@@ -39,8 +40,56 @@
                     </button>
                 </form>
             @endif
-                <div class="p-6">
-                    <table class="w-full text-left">
+
+            <div class="md:hidden space-y-4">
+    @forelse($histories as $h)
+        @php
+            $entry = \Carbon\Carbon::parse($h->entry_time);
+            $exit = \Carbon\Carbon::parse($h->exit_time);
+            $duration = $entry->diffForHumans($exit, true);
+        @endphp
+
+        <div class="bg-white p-4 rounded-xl shadow border">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-lg uppercase">
+                    {{ $h->plate_number }}
+                </h3>
+
+                <span class="text-xs px-2 py-1 bg-slate-100 rounded-full">
+                    {{ $h->vehicle->name }}
+                </span>
+            </div>
+
+            <p class="text-sm text-gray-500">
+                Durasi: {{ $duration }}
+            </p>
+
+            <div class="text-xs mt-2">
+                <p class="text-gray-500">In: {{ $h->entry_time }}</p>
+                <p class="text-red-400">Out: {{ $h->exit_time }}</p>
+            </div>
+
+            <div class="flex justify-between items-center mt-3">
+                <span class="font-bold text-orange-600">
+                    Rp {{ number_format($h->total_price, 0, ',', '.') }}
+                </span>
+
+                <form action="{{ route('admin.history.destroy', $h->id) }}" method="POST"
+                      onsubmit="return confirm('Hapus data ini?')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="text-red-500 text-sm">
+                        Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    @empty
+        <p class="text-center text-gray-400">Belum ada riwayat.</p>
+    @endforelse
+</div>
+               <div class="hidden md:block overflow-x-auto">
+    <table class="w-full text-left">
                         <thead>
                             <tr class="text-gray-400 text-sm uppercase tracking-wider border-b border-gray-100">
                                 <th class="pb-4 px-4 font-medium">Plat Nomor</th>

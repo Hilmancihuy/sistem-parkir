@@ -39,7 +39,7 @@
                     </div>
 
                     {{-- Form Update Kapasitas --}}
-                    <form action="{{ route('admin.slot', $slot->id) }}" method="POST" class="flex items-end gap-2">
+                    <form action="{{ route('admin.slot.update', $slot->id) }}" method="POST" class="flex items-end gap-2">
                         @csrf
                         @method('PUT')
                         <div class="flex-1">

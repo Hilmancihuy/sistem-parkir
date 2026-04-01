@@ -27,61 +27,63 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 
-// ================= ADMIN =================
+// ================= KHUSUS ADMIN =================
+// Akses Laporan, Slot, Manajemen User, dan Hapus Riwayat
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // Cukup tulis 'dashboard' karena sudah ada prefix 'admin'
         Route::get('dashboard', [ParkingController::class, 'dashboard'])->name('dashboard');
-
-        Route::get('history', function () {
-            return view('admin.history');
-        })->name('history');
-
-        // Sesuaikan nama rute 'masuk' agar sesuai dengan tombol di sidebar
-        Route::get('masuk', [ParkingController::class, 'create'])->name('masuk');
-        Route::post('masuk', [ParkingController::class, 'store'])->name('masuk.store');
-
+        
+        // Manajemen Slot & Area
         Route::get('slot', [ParkingSlotController::class, 'index'])->name('slot');
         Route::post('slot', [ParkingSlotController::class, 'store'])->name('slot.store');
+        Route::put('slot/update/{id}', [ParkingSlotController::class, 'updateSlot'])->name('slot.update');
 
-        Route::get('keluar', [ParkingController::class, 'indexKeluar'])->name('keluar');
-        Route::patch('keluar/{id}', [ParkingController::class, 'updateKeluar'])->name('keluar.update');
-
-        Route::get('history', [ParkingController::class, 'history'])->name('history');
+        // Laporan & Hapus Data
+        Route::get('report', [ParkingController::class, 'report'])->name('report');
         Route::delete('history/{id}', [ParkingController::class, 'destroy'])->name('history.destroy');
         Route::delete('history-all', [ParkingController::class, 'destroyAll'])->name('history.destroyAll');
 
-        Route::get('report', [ParkingController::class, 'report'])->name('report');
-
-        // Di dalam Route::group yang prefix-nya 'admin' dan name-nya 'admin.'
+        // Manajemen User (Admin & Petugas)
         Route::get('users', [UserController::class, 'index'])->name('users'); 
         Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
-
-        Route::get('cetak/{id}', [ParkingController::class, 'showCetak'])->name('cetak');
-        // Tambahkan ini untuk memproses update kapasitas slot/area
-        Route::put('/admin/slot/update/{id}', [ParkingSlotController::class, 'updateSlot'])->name('admin.slot.update');
-
-       
     });
 
 
-// ================= PETUGAS =================
-Route::middleware(['auth', 'role:petugas'])
-    ->prefix('petugas')
-    ->name('petugas.')
+// ================= FITUR OPERASIONAL (ADMIN & PETUGAS) =================
+// Petugas dan Admin bisa mengakses fitur Masuk, Keluar, dan History
+Route::middleware(['auth', 'role:admin|petugas'])
     ->group(function () {
+        
+        // Rute untuk Petugas
+        Route::prefix('petugas')->name('petugas.')->group(function () {
+            // DIUBAH: Sekarang memanggil controller, bukan function anonim
+            Route::get('dashboard', [ParkingController::class, 'petugasDashboard'])->name('dashboard');
 
-        Route::get('/dashboard', function () {
-            return view('petugas.dashboard');
-        })->name('dashboard');
+            // Petugas juga butuh akses fitur ini
+            Route::get('masuk', [ParkingController::class, 'create'])->name('masuk');
+            Route::post('masuk', [ParkingController::class, 'store'])->name('masuk.store');
+            Route::get('keluar', [ParkingController::class, 'indexKeluar'])->name('keluar');
+            Route::patch('keluar/{id}', [ParkingController::class, 'updateKeluar'])->name('keluar.update');
+            Route::get('history', [ParkingController::class, 'history'])->name('history');
+            Route::get('cetak/{id}', [ParkingController::class, 'showCetak'])->name('cetak');
+        });
 
+        // Duplikasi rute di prefix admin agar rute lama di sidebar admin tidak error
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('masuk', [ParkingController::class, 'create'])->name('masuk');
+            Route::post('masuk', [ParkingController::class, 'store'])->name('masuk.store');
+            Route::get('keluar', [ParkingController::class, 'indexKeluar'])->name('keluar');
+            Route::patch('keluar/{id}', [ParkingController::class, 'updateKeluar'])->name('keluar.update');
+            Route::get('history', [ParkingController::class, 'history'])->name('history');
+            Route::get('cetak/{id}', [ParkingController::class, 'showCetak'])->name('cetak');
+        });
     });
 
 
-// ================= PROFILE =================
+// ================= PROFILE & AUTH =================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
