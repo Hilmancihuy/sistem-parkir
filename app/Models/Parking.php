@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Parking extends Model
 {
+    
+
+    use SoftDeletes;
     protected $fillable = [
         'plate_number',
         'vehicle_id', // Tetap gunakan nama kolom ini sesuai database Anda
@@ -13,8 +17,12 @@ class Parking extends Model
         'entry_time',
         'exit_time',
         'total_price',
-        'status'
+        'status',
+        'user_id'
     ];
+
+    
+    
 
     // Ubah relasi ini agar mengarah ke Category
     public function vehicle()
@@ -26,6 +34,11 @@ class Parking extends Model
     {
         return $this->belongsTo(ParkingSlot::class, 'slot_id');
     }
+
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
 
 }
 

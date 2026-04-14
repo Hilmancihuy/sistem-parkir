@@ -153,8 +153,7 @@
                             $currentBill = $basePrice + ($hours * 1000);
                         @endphp
 
-                        <form action="{{ route('admin.keluar.update', $p->id) }}" method="POST" 
-                              onsubmit="return confirm('Konfirmasi Pembayaran Rp {{ number_format($currentBill, 0, ',', '.') }}?')">
+                        <form action="{{ route('admin.keluar.update', $p->id) }}" method="POST" class="form-bayar">
                             @csrf
                             @method('PATCH')
                             <div class="flex flex-col items-center gap-1">
@@ -180,3 +179,27 @@
         </div>
     </div>
 </x-app-layout>
+<script>
+document.querySelectorAll('.form-bayar').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        let harga = this.querySelector('span')?.innerText || 'Total';
+
+        Swal.fire({
+            title: 'Konfirmasi Pembayaran',
+            text: `Bayar ${harga}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#22c55e',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Bayar!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.submit();
+            }
+        });
+    });
+});
+</script>

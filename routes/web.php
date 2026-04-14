@@ -48,6 +48,7 @@ Route::middleware(['auth', 'role:admin'])
         // Manajemen User (Admin & Petugas)
         Route::get('users', [UserController::class, 'index'])->name('users'); 
         Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::put('users/{id}', [UserController::class, 'update'])->name('admin.users.update');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 

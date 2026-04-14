@@ -34,6 +34,34 @@ class UserController extends Controller
         return back()->with('success', 'Petugas berhasil didaftarkan.');
     }
 
+
+    // app/Http/Controllers/UserController.php
+
+public function update(Request $request, $id)
+{
+    $user = User::findOrFail($id);
+
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        'password' => 'nullable|string|min:8', // Password opsional saat edit
+    ]);
+
+    $user->name = $request->name;
+    $user->email = $request->email;
+
+    // Jika password diisi, maka update passwordnya
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    $user->save();
+
+    return back()->with('success', 'Data petugas berhasil diperbarui.');
+}
+
+
+
     public function destroy($id)
     {
         User::findOrFail($id)->delete();

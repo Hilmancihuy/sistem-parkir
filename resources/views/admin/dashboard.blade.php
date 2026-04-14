@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Dashboard Utama
+            Dashboard
         </h2>
     </x-slot>
 
@@ -65,7 +65,7 @@
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex justify-between items-center mb-2">
-                <h4 class="text-gray-500 text-sm font-medium uppercase font-bold">Area {{ $area->type }}</h4>
+                <h4 class="text-gray-500 text-sm uppercase font-bold">Area {{ $area->type }}</h4>
                 <span class="text-sm font-bold {{ str_replace('bg-', 'text-', $colorClass) }}">
                     {{ number_format($percentage, 0) }}% Terisi
                 </span>
@@ -85,44 +85,54 @@
 </div>
 
             {{-- Tabel Aktivitas Terakhir --}}
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-6 border-b border-gray-100">
-                    <h3 class="font-bold text-gray-700">Aktivitas Parkir Terakhir</h3>
-                </div>
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 text-gray-600 text-sm">
-                        <tr>
-                            <th class="p-4">Plat Nomor</th>
-                            <th class="p-4">Jenis</th>
-                            <th class="p-4">Slot</th>
-                            <th class="p-4">Waktu Masuk</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-    @foreach($recentParkings as $parking)
-    <tr class="hover:bg-gray-50 transition">
-        {{-- Menampilkan Plat Nomor --}}
-        <td class="p-4 text-xl font-bold uppercase text-gray-800">{{ $parking->plate_number ?? 'N/A' }}</td>
-        
-        {{-- Menampilkan Nama Kendaraan --}}
-        <td class="p-4 text-gray-600">{{ $parking->vehicle->name ?? 'N/A' }}</td>
-        
-        {{-- MENGUBAH SLOT CODE MENJADI AREA TYPE --}}
-        <td class="p-4">
-            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase {{ $parking->slot->type == 'motor' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
-                Area {{ $parking->slot->type ?? 'N/A' }}
-            </span>
-        </td>
-        
-        {{-- Menampilkan Jam Masuk --}}
-        <td class="p-4 text-gray-500 text-sm">
-            {{ \Carbon\Carbon::parse($parking->entry_time)->format('H:i') }} WIB
-        </td>
-    </tr>
-    @endforeach
-</tbody>
-                </table>
-            </div>
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="font-bold text-gray-700">Aktivitas Parkir Terakhir</h3>
+    </div>
+
+    {{-- Tambahkan div overflow-x-auto agar tabel tetap rapi di layar HP --}}
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 text-gray-600 text-sm">
+                <tr>
+                    <th class="p-4">Plat Nomor</th>
+                    <th class="p-4">Jenis</th>
+                    <th class="p-4">Slot</th>
+                    <th class="p-4">Waktu Masuk</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @forelse($recentParkings as $parking)
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4 text-xl font-bold uppercase text-gray-800">
+                        {{ $parking->plate_number ?? 'N/A' }}
+                    </td>
+                    <td class="p-4 text-gray-600">
+                        {{ $parking->vehicle->name ?? 'N/A' }}
+                    </td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase {{ ($parking->slot->type ?? '') == 'motor' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
+                            Area {{ $parking->slot->type ?? 'N/A' }}
+                        </span>
+                    </td>
+                    <td class="p-4 text-gray-500 text-sm">
+                        {{ \Carbon\Carbon::parse($parking->entry_time)->format('H:i') }} WIB
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-gray-400 italic">Belum ada aktivitas parkir.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Bagian Navigasi Paging --}}
+    <div class="p-4 bg-gray-50 border-t border-gray-100">
+        {{ $recentParkings->links() }}
+    </div>
+</div>
         </div>
     </div>
 </x-app-layout>

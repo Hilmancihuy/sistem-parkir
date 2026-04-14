@@ -81,10 +81,22 @@
                     // Gunakan select[name="slot_id"] sesuai form Anda
                     let selectArea = document.querySelector('select[name="slot_id"]');
                     if (selectArea) {
-                        // Pilih area pertama yang tersedia (index 1 karena index 0 adalah placeholder)
-                        if (selectArea.options.length > 1) {
-                            selectArea.selectedIndex = 1;
-                        }
+                       if (selectArea && data.type) {
+    for (let i = 0; i < selectArea.options.length; i++) {
+
+        let text = selectArea.options[i].text.toLowerCase();
+
+        if (data.type === 'mobil' && text.includes('mobil')) {
+            selectArea.selectedIndex = i;
+            break;
+        }
+
+        if (data.type === 'motor' && text.includes('motor')) {
+            selectArea.selectedIndex = i;
+            break;
+        }
+    }
+}
                     }
 
                     console.log('Form otomatis terisi untuk: ' + data.plate_number);

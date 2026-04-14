@@ -22,11 +22,16 @@ public function dashboard()
     $totalParkir = Parking::where('status', 'parkir')->count();
     
     // 3. Hitung total pendapatan hari ini
-    $pendapatanHariIni = Parking::whereDate('created_at', today())->sum('total_price');
+   $pendapatanHariIni = Parking::withTrashed()
+        ->where('status', 'selesai')
+        ->whereDate('exit_time', today())
+        ->sum('total_price');
 
-    // 4. Ambil 5 transaksi terakhir
-    $recentParkings = Parking::with(['vehicle', 'slot'])->latest()->take(5)->get();
-
+   // Mengambil 5 atau 10 data per halaman
+    $recentParkings = Parking::with(['vehicle', 'slot'])
+                        ->latest()
+                        ->paginate(5);
+                        
     // Pastikan 'areas' dimasukkan ke dalam compact()
     return view('admin.dashboard', compact(
         'areas', 
@@ -59,7 +64,8 @@ public function store(Request $request)
         'vehicle_id' => $request->category_id, 
         'slot_id' => $request->slot_id,
         'entry_time' => now(),
-        'status' => 'parkir'
+        'status' => 'parkir',
+        'user_id'      => auth()->id()
     ]);
 
     // Update Kuota Area: Tambah 1 yang terisi
@@ -164,12 +170,17 @@ public function destroyAll()
 
 public function report(Request $request)
 {
-    // Filter berdasarkan bulan dan tahun saat ini jika tidak ada input
     $month = $request->get('month', date('m'));
     $year = $request->get('year', date('Y'));
 
-    // 1. Pendapatan per Kategori (Chart Data)
-    $reportByCategory = Parking::with('vehicle')
+    // Gunakan withTrashed() agar data tetap terhitung di laporan meskipun sudah diarsip/hapus dari riwayat
+    $todayRevenue = Parking::withTrashed() 
+        ->where('status', 'selesai')
+        ->whereDate('exit_time', now())
+        ->sum('total_price');
+
+    $reportByCategory = Parking::withTrashed() 
+        ->with('vehicle')
         ->where('status', 'selesai')
         ->whereMonth('exit_time', $month)
         ->whereYear('exit_time', $year)
@@ -177,17 +188,16 @@ public function report(Request $request)
         ->groupBy('vehicle_id')
         ->map(function ($group) {
             return [
-                'name' => $group->first()->vehicle->name,
+                'name' => $group->first()->vehicle->name ?? 'N/A',
                 'total' => $group->sum('total_price'),
                 'count' => $group->count()
             ];
         });
 
-    // 2. Total Keseluruhan Bulan Ini
     $monthlyRevenue = $reportByCategory->sum('total');
 
-    // 3. Data Harian untuk Tabel
-    $dailyReports = Parking::where('status', 'selesai')
+    $dailyReports = Parking::withTrashed() 
+        ->where('status', 'selesai')
         ->whereMonth('exit_time', $month)
         ->whereYear('exit_time', $year)
         ->selectRaw('DATE(exit_time) as date, SUM(total_price) as total, COUNT(*) as count')
@@ -195,7 +205,14 @@ public function report(Request $request)
         ->orderBy('date', 'desc')
         ->get();
 
-    return view('admin.report', compact('reportByCategory', 'monthlyRevenue', 'dailyReports', 'month', 'year'));
+    return view('admin.report', compact(
+        'reportByCategory', 
+        'monthlyRevenue', 
+        'dailyReports', 
+        'month', 
+        'year', 
+        'todayRevenue'
+    ));
 }
 
 
