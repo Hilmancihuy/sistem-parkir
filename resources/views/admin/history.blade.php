@@ -18,16 +18,7 @@
             
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-200">
-                {{-- Tombol Hapus Semua --}}
-            @if($histories->count() > 0)
-                <form action="{{ route('admin.history.destroyAll') }}" method="POST" onsubmit="return confirm('Hapus semua riwayat permanen?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-200 transition">
-                        Bersihkan Semua Riwayat
-                    </button>
-                </form>
-            @endif
+                
 
             <div class="md:hidden space-y-4">
     @forelse($histories as $h)
@@ -61,15 +52,16 @@
                 <span class="font-bold text-orange-600">
                     Rp {{ number_format($h->total_price, 0, ',', '.') }}
                 </span>
-
-                <form action="{{ route('admin.history.destroy', $h->id) }}" method="POST"
-                      onsubmit="return confirm('Hapus data ini?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="text-red-500 text-sm">
-                        Hapus
-                    </button>
-                </form>
+                {{-- Hanya Admin yang bisa melihat tombol Bersihkan Semua --}}
+                    @if(auth()->user()->hasRole('admin') && $histories->count() > 0)
+                        <form action="{{ route('admin.history.destroyAll') }}" method="POST" id="deleteAllForm">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" onclick="confirmDeleteAll()" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-200 transition">
+                                Bersihkan Semua Riwayat
+                            </button>
+                        </form>
+                    @endif
             </div>
         </div>
     @empty
@@ -111,17 +103,20 @@
                                     Rp {{ number_format($h->total_price, 0, ',', '.') }}
                                 </td>
                                 <td class="py-4 px-4 text-center">
-                                    {{-- Tombol Hapus Per Baris --}}
-                                    <form action="{{ route('admin.history.destroy', $h->id) }}" method="POST" onsubmit="return confirm('Hapus data ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-400 hover:text-red-600">
-                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </td>
+    @if(auth()->user()->hasRole('admin'))
+        {{-- Tombol Hapus Satuan Hanya Muncul di Akun Admin --}}
+        <form action="{{ route('admin.history.destroy', $h->id) }}" method="POST" id="deleteForm-{{ $h->id }}">
+            @csrf
+            @method('DELETE')
+            <button type="button" onclick="confirmDelete('{{ $h->id }}', '{{ $h->plate_number }}')" class="text-red-500 text-sm font-semibold hover:underline">
+                Hapus
+            </button>
+        </form>
+    @else
+        {{-- Jika Petugas, tampilkan label atau biarkan kosong --}}
+        <span class="text-gray-400 text-xs">No Action</span>
+    @endif
+</td>
                             </tr>
                             @empty
                             <tr>
@@ -130,8 +125,60 @@
                             @endforelse
                         </tbody>
                     </table>
+                    <div class="mt-6 px-4 pb-4">
+                        {{ $histories->links() }}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    // Konfirmasi Hapus Satuan
+    function confirmDelete(id, plate) {
+        Swal.fire({
+            title: 'Hapus Riwayat?',
+            text: "Data parkir kendaraan " + plate + " akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444', // Red-500
+            cancelButtonColor: '#6b7280', // Gray-500
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('deleteForm-' + id).submit();
+            }
+        })
+    }
+
+    // Konfirmasi Hapus Semua
+    function confirmDeleteAll() {
+        Swal.fire({
+            title: 'Bersihkan Semua Riwayat?',
+            text: "Seluruh data transaksi yang sudah selesai akan dihapus permanen!",
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Bersihkan Semua!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('deleteAllForm').submit();
+            }
+        })
+    }
+
+    // Notifikasi Sukses (Jika ada session success)
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
+</script>

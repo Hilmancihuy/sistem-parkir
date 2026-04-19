@@ -28,10 +28,10 @@
         <div class="p-6 border-b border-slate-700/50">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 p-2.5 rounded-xl shadow-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                        </svg>
+                    <div class=" bg-orange-500 p-2.5 rounded-xl shadow-lg">
+                         <img src="{{ asset('images/logo.png') }}" 
+                        alt="Logo" 
+                        class="w-5 h-5 object-contain">
                     </div>
                     <div>
                         <h1 class="text-lg font-bold tracking-tight">Sistem Parkir</h1>

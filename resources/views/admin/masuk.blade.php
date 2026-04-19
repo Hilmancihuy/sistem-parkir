@@ -117,7 +117,7 @@
         @endforeach
     </select>
                             </div>
-<label class="block text-sm font-medium text-gray-700 mb-1">Pilih Area Parkir</label>
+
 <select name="slot_id" required class="w-full border-gray-300 rounded-md">
     <option value="">-- Pilih Area --</option>
     @foreach($areas as $a)

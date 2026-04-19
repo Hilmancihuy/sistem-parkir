@@ -139,11 +139,11 @@ public function updateKeluar(Request $request, $id)
 
 public function history()
 {
-    // Mengambil data parkir yang sudah selesai, diurutkan dari yang terbaru
+    // Mengambil data parkir yang sudah selesai dengan pagination
     $histories = Parking::with(['vehicle', 'slot'])
         ->where('status', 'selesai')
         ->latest('exit_time')
-        ->get();
+        ->paginate(10); // Mengganti get() menjadi paginate(10)
 
     return view('admin.history', compact('histories'));
 }
@@ -153,6 +153,9 @@ public function history()
 
 public function destroy($id)
 {
+    if (!auth()->user()->hasRole('admin')) {
+        return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus data!');
+    }
     $parking = Parking::findOrFail($id);
     $parking->delete();
 
@@ -225,9 +228,14 @@ public function report(Request $request)
 // app/Http/Controllers/ParkingController.php
 
 public function setAntrian(Request $request) {
-    // Simpan semua data dalam satu array agar tidak tertukar
+    $rawPlate = strtoupper($request->plate_number); // Pastikan Kapital
+    
+    // Logika menambahkan spasi: D1234A menjadi D 1234 A
+    // Regex ini memisahkan Huruf Depan, Angka, dan Huruf Belakang
+    $formattedPlate = preg_replace('/^([A-Z]{1,2})(\d+)([A-Z]*)$/', '$1 $2 $3', $rawPlate);
+
     cache(['temp_parking_data' => [
-        'plate_number' => $request->plate_number,
+        'plate_number' => trim($formattedPlate), // trim untuk hapus spasi berlebih
         'type'         => $request->type
     ]], now()->addMinutes(1));
     
