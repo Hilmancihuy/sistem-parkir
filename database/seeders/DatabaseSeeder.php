@@ -23,7 +23,10 @@ class DatabaseSeeder extends Seeder
     
     // Memberikan role admin ke user (jika pakai Spatie)
     $admin->assignRole('admin');
-    
+
+    \App\Models\Category::create(['name' => 'Motor', 'price' => 2000]);
+    \App\Models\Category::create(['name' => 'Mobil', 'price' => 5000]);
+
     \App\Models\ParkingSlot::create([
         'type' => 'motor',
         'capacity' => 100,
