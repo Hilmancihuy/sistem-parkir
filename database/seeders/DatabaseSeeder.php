@@ -8,11 +8,22 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
+    
    public function run(): void
 {
+    // Pastikan Anda memanggil RoleSeeder jika menggunakan Spatie Role
+    $this->call(RoleSeeder::class); 
+
+    // Membuat User Admin
+    $admin = \App\Models\User::create([
+        'name' => 'Admin Parkir',
+        'email' => 'admin@gmail.com',
+        'password' => bcrypt('password123'), // Ini adalah password Anda
+    ]);
+    
+    // Memberikan role admin ke user (jika pakai Spatie)
+    $admin->assignRole('admin');
+    
     \App\Models\ParkingSlot::create([
         'type' => 'motor',
         'capacity' => 100,
